@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# secrets — never commit
+.env
+.env.*
+!.env.example
+
+# runtime data (menu database file + uploaded images)
+/data/
+
+# logs / misc
+npm-debug.log*
+logs/
+.DS_Store
+/tests/e2e/output/
+.last-deploy
