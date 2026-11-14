@@ -1,0 +1,46 @@
+# ─── MAMMOTH CAFE — Nginx reverse proxy (EXAMPLE) ───────────────────────
+# A NEW, separate server block. It does not touch any existing site:
+#   sudo cp deploy/nginx-mammoth-cafe.conf.example /etc/nginx/sites-available/mammoth-cafe
+#   (edit server_name)  →  sudo ln -s /etc/nginx/sites-available/mammoth-cafe /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+# Never edit or replace the config files of the other application.
+
+upstream mammoth_cafe {
+    server 127.0.0.1:3100;   # must match PORT in ecosystem.config.cjs — keep it different from other apps
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;   # ← your domain
+
+    # Admin image uploads (max 8 MB per image)
+    client_max_body_size 10m;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    # Fingerprinted build assets: cache forever
+    location /_next/static/ {
+        proxy_pass http://mammoth_cafe;
+        proxy_set_header Host $host;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location / {
+        proxy_pass http://mammoth_cafe;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        # Required: Server Actions (admin forms) verify Origin against Host.
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+}
+
+# After `sudo certbot --nginx -d example.com -d www.example.com`, certbot adds the
+# `listen 443 ssl` block and the HTTP→HTTPS redirect to THIS file only.
