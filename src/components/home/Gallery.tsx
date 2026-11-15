@@ -9,7 +9,7 @@ import { pick, type Dictionary, type Locale } from "@/lib/i18n";
 
 const spans: Record<GalleryImage["size"], string> = {
   normal: "",
-  wide: "sm:col-span-2",
+  wide: "col-span-2",
   tall: "row-span-2",
 };
 
@@ -41,21 +41,21 @@ export function Gallery({ locale, t, images }: { locale: Locale; t: Dictionary["
   const current = active !== null ? images[active] : null;
 
   return (
-    <section id="gallery" className="on-dark bg-chocolate py-24 text-cream md:py-36">
+    <section id="gallery" className="on-dark bg-carbon py-24 text-soft md:py-36">
       <div className="container-site">
         <div className="mb-14 md:mb-20">
-          <Reveal as="p" className="eyebrow mb-5 text-beige!">
+          <Reveal as="p" className="eyebrow mb-5 text-sky!">
             {t.eyebrow}
           </Reveal>
           <Reveal as="h2" delay={80} className="display-title text-[clamp(2.25rem,5.4vw,4.5rem)]">
             {t.title}
           </Reveal>
-          <Reveal as="p" delay={140} className="mt-4 text-cream/60">
+          <Reveal as="p" delay={140} className="mt-4 text-soft/60">
             {t.body}
           </Reveal>
         </div>
 
-        <ul className="grid auto-rows-[44vw] grid-flow-dense grid-cols-2 gap-3 sm:auto-rows-[30vw] sm:grid-cols-3 md:gap-4 lg:auto-rows-[17rem] lg:grid-cols-4">
+        <ul className="grid auto-rows-[42vw] grid-flow-dense grid-cols-2 gap-3 sm:auto-rows-[22vw] sm:grid-cols-4 md:gap-4 lg:auto-rows-[min(17rem,20vw)]">
           {images.map((image, i) => {
             const alt = pick(locale, image.altFa, image.altEn);
             return (
@@ -64,7 +64,7 @@ export function Gallery({ locale, t, images }: { locale: Locale; t: Dictionary["
                   type="button"
                   onClick={() => setActive(i)}
                   aria-label={`${t.open}${alt ? `: ${alt}` : ""}`}
-                  className="group relative block size-full cursor-zoom-in overflow-hidden rounded-2xl bg-espresso"
+                  className="group relative block size-full cursor-zoom-in overflow-hidden rounded-2xl bg-deep"
                 >
                   <SmartImage
                     src={image.src}
@@ -73,7 +73,7 @@ export function Gallery({ locale, t, images }: { locale: Locale; t: Dictionary["
                     sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                     className="object-cover transition-transform duration-[1400ms] ease-out-expo group-hover:scale-[1.07]"
                   />
-                  <span className="absolute inset-0 bg-ink/0 transition-colors duration-500 group-hover:bg-ink/20" />
+                  <span className="absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/20" />
                 </button>
               </Reveal>
             );
@@ -85,26 +85,26 @@ export function Gallery({ locale, t, images }: { locale: Locale; t: Dictionary["
         ref={dialogRef}
         onClose={() => setActive(null)}
         onClick={(e) => e.target === e.currentTarget && setActive(null)}
-        className="on-dark m-0 size-full max-h-none max-w-none bg-ink/95 text-cream backdrop:bg-ink/80 open:grid open:place-items-center"
+        className="on-dark m-0 size-full max-h-none max-w-none bg-black/95 text-soft backdrop:bg-black/80 open:grid open:place-items-center"
       >
         {current && (
-          <figure className="relative flex max-h-full w-full flex-col items-center p-4 md:p-12">
-            <div className="relative h-[72svh] w-full max-w-6xl">
-              <SmartImage
-                key={current.id}
-                src={current.src}
-                alt={pick(locale, current.altFa, current.altEn)}
-                fill
-                sizes="100vw"
-                className="page-enter object-contain"
-              />
-            </div>
-            <figcaption className="mt-5 flex items-center gap-6 text-sm text-cream/70">
-              <button type="button" onClick={() => step(-1)} aria-label={t.prev} className="grid size-11 place-items-center rounded-full border border-cream/20 hover:border-cream">
+          <figure className="relative flex size-full flex-col items-center justify-center gap-5 px-4 pt-20 pb-6 md:px-12">
+            {/* Intrinsic sizing: the image is as large as fits, and the controls sit right under it. */}
+            <SmartImage
+              key={current.id}
+              src={current.src}
+              alt={pick(locale, current.altFa, current.altEn)}
+              width={1600}
+              height={1200}
+              sizes="100vw"
+              className="page-enter h-auto max-h-[calc(100svh-13rem)] w-auto max-w-full rounded-xl object-contain"
+            />
+            <figcaption className="flex w-full max-w-md items-center justify-between gap-4 text-sm text-soft/80">
+              <button type="button" onClick={() => step(-1)} aria-label={t.prev} className="grid size-12 shrink-0 place-items-center rounded-full border border-soft/30 hover:border-soft">
                 {locale === "fa" ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
               </button>
-              <span className="min-w-40 text-center">{pick(locale, current.altFa, current.altEn)}</span>
-              <button type="button" onClick={() => step(1)} aria-label={t.next} className="grid size-11 place-items-center rounded-full border border-cream/20 hover:border-cream">
+              <span className="min-w-0 flex-1 text-center">{pick(locale, current.altFa, current.altEn)}</span>
+              <button type="button" onClick={() => step(1)} aria-label={t.next} className="grid size-12 shrink-0 place-items-center rounded-full border border-soft/30 hover:border-soft">
                 {locale === "fa" ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-5" />}
               </button>
             </figcaption>
@@ -112,7 +112,7 @@ export function Gallery({ locale, t, images }: { locale: Locale; t: Dictionary["
               type="button"
               onClick={() => setActive(null)}
               aria-label={t.close}
-              className="absolute top-4 grid size-11 place-items-center rounded-full bg-cream text-espresso ltr:right-4 rtl:left-4"
+              className="absolute top-4 grid size-12 place-items-center rounded-full bg-soft text-deep ltr:right-4 rtl:left-4"
             >
               <X className="size-5" />
             </button>

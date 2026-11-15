@@ -80,10 +80,10 @@ export function MenuBrowser({ locale, t, sections }: Props) {
   return (
     <div>
       {/* Sticky tools: search + category rail */}
-      <div className="sticky top-16 z-30 border-b border-espresso/10 bg-offwhite/95 backdrop-blur-sm md:top-20">
+      <div className="sticky top-16 z-30 border-b border-deep/10 bg-white/95 backdrop-blur-sm md:top-20">
         <div className="container-site flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:gap-8">
           <div className="relative lg:w-80 lg:shrink-0">
-            <Search className="pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-chocolate/50 ltr:left-4 rtl:right-4" aria-hidden="true" />
+            <Search className="pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-carbon/50 ltr:left-4 rtl:right-4" aria-hidden="true" />
             <input
               type="search"
               value={query}
@@ -91,14 +91,14 @@ export function MenuBrowser({ locale, t, sections }: Props) {
               placeholder={t.search}
               aria-label={t.searchLabel}
               enterKeyHint="search"
-              className="h-12 w-full rounded-full border border-espresso/15 bg-white/70 px-11 text-[0.95rem] outline-none transition-colors placeholder:text-chocolate/45 focus:border-caramel [&::-webkit-search-cancel-button]:hidden"
+              className="h-12 w-full rounded-full border border-deep/15 bg-white/70 px-11 text-[0.95rem] outline-none transition-colors placeholder:text-carbon/45 focus:border-red [&::-webkit-search-cancel-button]:hidden"
             />
             {searching && (
               <button
                 type="button"
                 onClick={() => setQuery("")}
                 aria-label={t.clear}
-                className="absolute top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-full text-chocolate/60 hover:text-espresso ltr:right-1.5 rtl:left-1.5"
+                className="absolute top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full text-carbon/60 hover:text-deep ltr:right-0.5 rtl:left-0.5"
               >
                 <X className="size-4" />
               </button>
@@ -116,8 +116,8 @@ export function MenuBrowser({ locale, t, sections }: Props) {
                     data-chip={category.slug}
                     aria-current={on ? "true" : undefined}
                     onClick={() => jump(category.slug)}
-                    className={`min-h-10 shrink-0 rounded-full border px-4 text-sm whitespace-nowrap transition-colors duration-300 ${
-                      on ? "border-espresso bg-espresso text-cream" : "border-espresso/15 text-chocolate hover:border-espresso/50"
+                    className={`min-h-11 shrink-0 rounded-full border px-4 text-sm whitespace-nowrap transition-colors duration-300 ${
+                      on ? "border-deep bg-deep text-soft" : "border-deep/15 text-carbon hover:border-deep/50"
                     }`}
                   >
                     {pick(locale, category.nameFa, category.nameEn)}
@@ -130,13 +130,13 @@ export function MenuBrowser({ locale, t, sections }: Props) {
       </div>
 
       <div className="container-site pt-10 pb-24 md:pb-36">
-        <p className="mb-2 text-sm text-chocolate/60" role="status" aria-live="polite">
+        <p className="mb-2 text-sm text-carbon/60" role="status" aria-live="polite">
           {searching ? `${formatNumber(total, locale)} ${t.results}` : t.priceNote}
         </p>
 
         {filtered.length === 0 && (
           <div className="py-28 text-center">
-            <p className="display-title text-2xl text-chocolate/70">{t.noResults}</p>
+            <p className="display-title text-2xl text-carbon/70">{t.noResults}</p>
             <button type="button" onClick={() => setQuery("")} className="btn btn-dark mt-8">
               {t.clear}
             </button>
@@ -145,14 +145,14 @@ export function MenuBrowser({ locale, t, sections }: Props) {
 
         {filtered.map(({ category, items }) => (
           <section key={category.id} id={category.slug} data-menu-section className="scroll-mt-48 pt-14 md:pt-20 lg:scroll-mt-40">
-            <header className="mb-8 flex items-end justify-between gap-6 border-b border-espresso/15 pb-5">
+            <header className="mb-8 flex items-end justify-between gap-6 border-b border-deep/15 pb-5">
               <div>
                 <h2 className="display-title text-3xl md:text-[2.75rem]">{pick(locale, category.nameFa, category.nameEn)}</h2>
                 {locale === "fa" && category.nameEn && (
-                  <p className="font-display mt-2 text-sm tracking-[0.2em] text-caramel uppercase">{category.nameEn}</p>
+                  <p className="font-display mt-2 text-sm tracking-[0.2em] text-carbon/70 uppercase">{category.nameEn}</p>
                 )}
               </div>
-              <span className="font-display text-4xl leading-none font-light text-espresso/25 ">
+              <span className="font-display text-4xl leading-none font-light text-deep/25 ">
                 {String(items.length).padStart(2, "0")}
               </span>
             </header>
@@ -177,9 +177,9 @@ function MenuCard({ item, locale, t }: { item: MenuItem; locale: Locale; t: Dict
     <li
       data-item={item.id}
       data-available={item.available}
-      className={`group flex gap-4 border-b border-espresso/8 py-5 md:gap-6 ${off ? "opacity-55" : ""}`}
+      className={`group flex gap-4 border-b border-deep/8 py-5 md:gap-6 ${off ? "opacity-55" : ""}`}
     >
-      <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-cream md:size-32">
+      <div className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-soft md:size-32">
         {item.image && (
           <SmartImage
             src={item.image}
@@ -197,22 +197,22 @@ function MenuCard({ item, locale, t }: { item: MenuItem; locale: Locale; t: Dict
             <h3 className="flex flex-wrap items-center gap-2 text-lg font-bold md:text-xl">
               <span className={off ? "line-through decoration-1" : ""}>{name}</span>
               {item.popular && !off && (
-                <span className="rounded-full bg-caramel px-2.5 py-0.5 text-[0.68rem] font-medium text-offwhite">{t.popular}</span>
+                <span className="rounded-full bg-red px-2.5 py-0.5 text-xs font-bold text-white">{t.popular}</span>
               )}
-              {off && <span className="rounded-full border border-espresso/40 px-2.5 py-0.5 text-[0.68rem] font-medium">{t.unavailable}</span>}
+              {off && <span className="rounded-full border border-deep/40 px-2.5 py-0.5 text-xs font-medium">{t.unavailable}</span>}
             </h3>
-            {locale === "fa" && item.nameEn && <p className="font-display mt-0.5 text-[0.8rem] tracking-wider text-caramel">{item.nameEn}</p>}
+            {locale === "fa" && item.nameEn && <p className="font-display mt-0.5 text-[0.8rem] tracking-wider text-carbon/70">{item.nameEn}</p>}
           </div>
           {item.variants.length === 0 && <Price value={item.price} locale={locale} unit={t.toman} className="mt-0.5 text-lg" />}
         </div>
 
-        {description && <p className="mt-2 text-sm leading-relaxed text-chocolate/70">{description}</p>}
+        {description && <p className="mt-2 text-sm leading-relaxed text-carbon/70">{description}</p>}
 
         {item.variants.length > 0 && (
           <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-1.5 text-sm">
             {item.variants.map((v, i) => (
               <li key={i} className="flex items-baseline gap-2">
-                <span className="text-chocolate/60">{pick(locale, v.labelFa, v.labelEn)}</span>
+                <span className="text-carbon/60">{pick(locale, v.labelFa, v.labelEn)}</span>
                 <Price value={v.price} locale={locale} unit={t.toman} />
               </li>
             ))}

@@ -66,11 +66,11 @@ export function Header({ locale, nav }: HeaderProps) {
   }, [open]);
 
   return (
-    <header className="on-dark fixed inset-x-0 top-0 z-50 text-cream">
+    <header className="on-dark fixed inset-x-0 top-0 z-50 text-soft">
       <div
         className={`absolute inset-0 -z-10 transition-opacity duration-500 ${
           scrolled && !open ? "opacity-100" : "opacity-0"
-        } border-b border-cream/10 bg-ink/92`}
+        } border-b border-soft/10 bg-black/92`}
       />
       <div className="container-site flex h-16 items-center justify-between md:h-20">
         <Link href={localePath(locale, "/")} aria-label={`${nav.home} — MAMMOTH CAFE`} onClick={() => setOpen(false)}>
@@ -79,24 +79,24 @@ export function Header({ locale, nav }: HeaderProps) {
 
         <nav aria-label="Main" className="hidden items-center gap-9 text-sm font-medium lg:flex">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="link-underline opacity-85 transition-opacity hover:opacity-100">
-              {link.label}
+            <Link key={link.href} href={link.href} className="inline-flex min-h-11 items-center opacity-85 transition-opacity hover:opacity-100 [&>span]:link-underline">
+              <span>{link.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href={switchHref}
             hrefLang={other}
             lang={other}
-            className={`rounded-full px-3 py-2 text-xs font-medium opacity-80 transition-opacity hover:opacity-100 ${
+            className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-medium opacity-85 transition-opacity hover:opacity-100 ${
               other === "en" ? "font-display tracking-[0.18em] uppercase" : ""
             }`}
           >
             {nav.language}
           </Link>
-          <Link href={localePath(locale, "/menu")} className="btn btn-cream hidden min-h-10 px-5 py-2 text-sm sm:inline-flex lg:hidden xl:inline-flex">
+          <Link href={localePath(locale, "/menu")} className="btn btn-soft hidden min-h-10 px-5 py-2 text-sm sm:inline-flex lg:hidden xl:inline-flex">
             {nav.menu}
           </Link>
           <button
@@ -116,13 +116,13 @@ export function Header({ locale, nav }: HeaderProps) {
       <span
         ref={progressRef}
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 block h-px origin-right scale-x-0 bg-beige ltr:origin-left"
+        className="absolute inset-x-0 bottom-0 block h-0.5 origin-right scale-x-0 bg-red ltr:origin-left"
       />
 
       {/* Mobile navigation */}
       <div
         id="mobile-nav"
-        className={`fixed inset-0 -z-20 bg-ink transition-[opacity,visibility] duration-500 lg:hidden ${
+        className={`fixed inset-0 -z-20 bg-black transition-[opacity,visibility] duration-500 lg:hidden ${
           open ? "visible opacity-100" : "invisible opacity-0"
         }`}
       >
@@ -133,7 +133,7 @@ export function Header({ locale, nav }: HeaderProps) {
               href={link.href}
               onClick={() => setOpen(false)}
               tabIndex={open ? 0 : -1}
-              className={`display-title border-b border-cream/10 py-4 text-3xl transition-[opacity,transform] duration-700 ease-out-expo ${
+              className={`display-title border-b border-soft/10 py-4 text-3xl transition-[opacity,transform] duration-700 ease-out-expo ${
                 open ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
               }`}
               style={{ transitionDelay: open ? `${80 + i * 55}ms` : "0ms" }}
