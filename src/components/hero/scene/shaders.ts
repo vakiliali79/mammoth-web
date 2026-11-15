@@ -16,11 +16,14 @@ float mmNoise(vec2 p) {
     u.y
   );
 }
+#ifndef MM_OCTAVES
+#define MM_OCTAVES 5
+#endif
 float mmFbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
   mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < MM_OCTAVES; i++) {
     v += a * mmNoise(p);
     p = m * p;
     a *= 0.5;
@@ -127,7 +130,7 @@ mmCol = mix(mmCol, mmPale, mmBubble * 0.32);
 mmCol *= mix(1.0, 0.5, smoothstep(0.84, 1.0, mmR));
 
 diffuseColor.rgb = mmCol;
-float mmRough = mix(0.06, 0.52, mmCrema);
+float mmRough = mix(0.08, 0.62, mmCrema);
 float mmHeight = mmWaves(vDisc) * 0.02 + mmCrema * 0.004 + mmFine * mmCrema * 0.002;
 `;
 
@@ -204,6 +207,6 @@ void main() {
   float fade = smoothstep(0.0, 0.1, y) * (1.0 - smoothstep(0.35, 0.98, y));
   float alpha = column * wisps * fade * uOpacity;
 
-  gl_FragColor = vec4(vec3(1.0, 0.955, 0.89) * alpha, alpha);
+  gl_FragColor = vec4(vec3(0.95, 0.975, 1.0) * alpha, alpha);
 }
 `;

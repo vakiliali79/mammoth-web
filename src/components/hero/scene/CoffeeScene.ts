@@ -37,7 +37,7 @@ export interface SceneState {
   pour: number;
   /** Steam opacity 0–1 */
   steam: number;
-  /** Warm back-light + background warmth 0–1 */
+  /** Back-light glow + backdrop brightening 0–1 (kept as `warmth` for the timeline) */
   warmth: number;
   saucerDip: number;
   camX: number;
@@ -106,6 +106,13 @@ export class CoffeeScene {
   private time = 0;
   private frozen = false;
   private lastSignature = "";
+  private lastShadowSignature = "";
+  private lastSteamFrame = 0;
+  // Adaptive resolution: if frames are consistently slow, render fewer pixels.
+  private dpr = 1;
+  private resolutionScale = 1;
+  private slowFrames = 0;
+  private frameEma = 16;
   private width = 1;
   private height = 1;
 
@@ -134,13 +141,15 @@ export class CoffeeScene {
     this.renderer.toneMappingExposure = 1.08;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
+    // Re-rendered on demand (see update()): steam-only frames reuse the last shadow map.
+    this.renderer.shadowMap.autoUpdate = false;
 
     this.scene.environment = this.buildEnvironment();
-    this.scene.environmentIntensity = 0.85;
+    this.scene.environmentIntensity = 1.05;
 
     // ── Ceramic ─────────────────────────────────────────────────────────
     const ceramic = new THREE.MeshPhysicalMaterial({
-      color: 0xf1e6d4,
+      color: 0xf3f6f9,
       roughness: 0.3,
       metalness: 0,
       clearcoat: 1,
@@ -168,10 +177,12 @@ export class CoffeeScene {
       color: 0xffffff,
       roughness: 0.2,
       metalness: 0,
-      envMapIntensity: 1.25,
+      // Kept moderate: at grazing angles a strong studio reflection would hide the crema.
+      envMapIntensity: 0.7,
     });
     liquidMat.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, this.uniforms);
+      shader.fragmentShader = `#define MM_OCTAVES ${high ? 5 : 4}\n${shader.fragmentShader}`;
       shader.vertexShader = shader.vertexShader
         .replace("#include <common>", `#include <common>\n${LIQUID_VERTEX_PARS}`)
         .replace("#include <begin_vertex>", `#include <begin_vertex>\n${LIQUID_VERTEX_MAIN}`);
@@ -216,11 +227,12 @@ export class CoffeeScene {
     // ── Steam (camera-facing sheets with a noise-driven wisp shader) ────
     const steamGeo = this.track(new THREE.PlaneGeometry(2.6, 4.2));
     steamGeo.translate(0, 2.1, 0);
-    for (const [seed, scale] of [
-      [1.7, 1],
-      [6.3, 0.82],
-    ] as const) {
+    // Steam is full-screen-ish alpha overdraw, the most expensive thing on a phone GPU:
+    // the low tier draws one sheet (slightly denser) with fewer noise octaves.
+    const sheets: (readonly [number, number])[] = high ? [[1.7, 1], [6.3, 0.82]] : [[1.7, 1]];
+    for (const [seed, scale] of sheets) {
       const mat = new THREE.ShaderMaterial({
+        defines: { MM_OCTAVES: high ? 5 : 3 },
         vertexShader: STEAM_VERTEX,
         fragmentShader: STEAM_FRAGMENT,
         uniforms: { uTime: this.uniforms.uTime, uOpacity: { value: 0 }, uSeed: { value: seed } },
@@ -248,7 +260,7 @@ export class CoffeeScene {
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    const poolTex = this.track(createRadialTexture("rgba(255,190,130,0.20)", "rgba(255,190,130,0)"));
+    const poolTex = this.track(createRadialTexture("rgba(169,213,232,0.16)", "rgba(169,213,232,0)"));
     const pool = new THREE.Mesh(
       this.track(new THREE.PlaneGeometry(15, 15)),
       this.track(
@@ -279,7 +291,7 @@ export class CoffeeScene {
     this.saucer.add(this.cupShadow);
 
     // ── Lights ──────────────────────────────────────────────────────────
-    const key = new THREE.SpotLight(0xfff0dc, 260, 30, 0.42, 0.95, 2);
+    const key = new THREE.SpotLight(0xfff7ee, 260, 30, 0.42, 0.95, 2);
     key.position.set(-4.2, 8.5, 4.6);
     key.target.position.set(0, 0.8, 0);
     key.castShadow = true;
@@ -290,18 +302,19 @@ export class CoffeeScene {
     key.shadow.normalBias = 0.06;
     key.shadow.radius = 7;
     this.scene.add(key, key.target);
+    this.track(key);
 
-    const rim = new THREE.DirectionalLight(0xffc48a, 1.5);
+    const rim = new THREE.DirectionalLight(0xa9d5e8, 1.7);
     rim.position.set(5, 3.2, -6);
     this.scene.add(rim);
 
-    const rim2 = new THREE.DirectionalLight(0xa9c1ff, 0.35);
+    const rim2 = new THREE.DirectionalLight(0x5aa6d0, 0.45);
     rim2.position.set(-6, 2.5, -4);
     this.scene.add(rim2);
 
-    this.scene.add(new THREE.HemisphereLight(0x9a7758, 0x140b08, 0.4));
+    this.scene.add(new THREE.HemisphereLight(0xc5dbe8, 0x0b1a26, 0.65));
 
-    this.glow = new THREE.PointLight(0xff9a4a, 0, 12, 2);
+    this.glow = new THREE.PointLight(0x7cc4ea, 0, 12, 2);
     this.glow.position.set(0.6, 1.7, -2.6);
     this.scene.add(this.glow);
   }
@@ -322,12 +335,12 @@ export class CoffeeScene {
       mesh.lookAt(0, 0, 0);
       studio.add(mesh);
     };
-    box(9, 6, 0xfff2e2, 5.5, [-5, 9, 4]); // key softbox
-    box(2.2, 9, 0xffd3a1, 4, [9, 3, -3]); // warm strip
-    box(2, 7, 0xcdd9ff, 1.6, [-9, 2.5, -5]); // cool kicker
-    box(14, 3, 0xffe9cf, 0.9, [0, 3, 11]); // front fill
-    box(30, 30, 0x1a0e09, 1, [0, -6, 0]); // dark floor bounce
-    studio.background = new THREE.Color(0x070403);
+    box(9, 6, 0xfffaf4, 5.5, [-5, 9, 4]); // key softbox
+    box(2.2, 9, 0xa9d5e8, 4, [9, 3, -3]); // light-blue strip
+    box(2, 7, 0x8cc3e0, 1.6, [-9, 2.5, -5]); // cool kicker
+    box(14, 4, 0xf4f7fa, 1.5, [0, 3, 11]); // front fill
+    box(30, 30, 0x082b40, 0.6, [0, -6, 0]); // deep-blue floor bounce
+    studio.background = new THREE.Color(0x04070a);
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     const target = pmrem.fromScene(studio, 0.035);
@@ -343,14 +356,27 @@ export class CoffeeScene {
   }
 
   setSize(width: number, height: number, dpr: number) {
+    if (width === this.width && height === this.height && dpr === this.dpr) return;
     this.width = width;
     this.height = height;
-    const cap = this.quality === "high" ? 2 : 1.5;
-    this.renderer.setPixelRatio(Math.min(dpr, cap));
-    this.renderer.setSize(width, height, false);
+    this.dpr = dpr;
+    this.applyResolution();
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.lastSignature = "";
+  }
+
+  private applyResolution() {
+    const cap = this.quality === "high" ? 2 : 1.5;
+    // Never go below 1 device pixel per CSS pixel × 0.75 — below that the cup rim visibly aliases.
+    const ratio = Math.max(0.75, Math.min(this.dpr, cap) * this.resolutionScale);
+    this.renderer.setPixelRatio(ratio);
+    this.renderer.setSize(this.width, this.height, false);
+  }
+
+  /** Current width/height ratio of the drawing surface. */
+  get aspect() {
+    return this.width / this.height;
   }
 
   /** Normalised pointer position in [-1, 1] for a subtle camera parallax. */
@@ -379,9 +405,9 @@ export class CoffeeScene {
   private loop = (now: number) => {
     if (!this.running) return;
     this.raf = requestAnimationFrame(this.loop);
-    const dt = Math.min(0.05, (now - this.lastTime) / 1000);
+    const elapsed = now - this.lastTime;
     this.lastTime = now;
-    this.update(dt);
+    this.update(Math.min(0.05, elapsed / 1000), false, elapsed, now);
   };
 
   /** Draws one frame immediately (used for the first paint and reduced motion). */
@@ -389,7 +415,7 @@ export class CoffeeScene {
     this.update(0, true);
   }
 
-  private update(dt: number, force = false) {
+  private update(dt: number, force = false, elapsedMs = 16, now = 0) {
     const s = this.state;
     if (!this.frozen) this.time += dt;
 
@@ -419,8 +445,28 @@ export class CoffeeScene {
     // Skip the GPU entirely when nothing on screen can have changed.
     const animated = s.steam > 0.002 || (s.pour > 0.001 && s.pour < 0.999) || moving;
     const signature = `${s.cupY.toFixed(4)}|${s.cupSpin.toFixed(4)}|${s.fill.toFixed(4)}|${s.pour.toFixed(4)}|${s.steam.toFixed(3)}|${s.warmth.toFixed(3)}|${s.camX.toFixed(3)}|${s.camY.toFixed(3)}|${s.camZ.toFixed(3)}|${s.tgtX.toFixed(3)}|${s.tgtY.toFixed(3)}|${s.shiftX.toFixed(3)}|${s.shiftY.toFixed(3)}|${this.fit.toFixed(3)}`;
-    if (!force && !animated && signature === this.lastSignature) return;
+    const changed = signature !== this.lastSignature;
+    if (!force && !animated && !changed) return;
+    // When only the steam is drifting (no scroll, no slosh, no pour) 30 fps is indistinguishable
+    // from 60 and halves the GPU/battery cost of the state visitors linger on the longest.
+    const steamOnly = !force && !changed && !moving && !(s.pour > 0.001 && s.pour < 0.999);
+    if (steamOnly && now - this.lastSteamFrame < 30) return;
+    this.lastSteamFrame = now;
     this.lastSignature = signature;
+
+    // Adaptive resolution: sustained slow frames → step the pixel ratio down (never back up,
+    // to avoid oscillating). Only counted while continuously animating.
+    if (!force && (animated || changed) && elapsedMs < 250) {
+      this.frameEma += (elapsedMs - this.frameEma) * 0.1;
+      const budget = steamOnly ? 45 : 26;
+      this.slowFrames = this.frameEma > budget ? this.slowFrames + 1 : Math.max(0, this.slowFrames - 2);
+      if (this.slowFrames > 45 && this.resolutionScale > 0.6) {
+        this.resolutionScale = Math.max(0.6, this.resolutionScale * 0.82);
+        this.slowFrames = 0;
+        this.frameEma = 16;
+        this.applyResolution();
+      }
+    }
 
     // ── Cup & saucer ──
     this.saucer.position.y = -s.saucerDip;
@@ -437,7 +483,12 @@ export class CoffeeScene {
     const grow = THREE.MathUtils.smoothstep(s.fill, 0, 0.035);
     const radius = (innerRadius(level) + 0.006) * Math.max(0.0001, grow);
     this.liquid.visible = s.fill > 0.0005;
-    this.liquid.position.y = level;
+    // The first drops form a puddle under the stream (not in the middle of the cup), then spread.
+    const cosSpin = Math.cos(s.cupSpin);
+    const sinSpin = Math.sin(s.cupSpin);
+    const localPourX = cosSpin * POUR_POS.x - sinSpin * POUR_POS.y;
+    const localPourZ = sinSpin * POUR_POS.x + cosSpin * POUR_POS.y;
+    this.liquid.position.set(localPourX * (1 - grow), level, localPourZ * (1 - grow));
     this.liquid.scale.set(radius, 1, radius);
     this.liquid.rotation.z = this.tilt;
     this.liquid.rotation.x = this.tilt * 0.6;
@@ -453,11 +504,8 @@ export class CoffeeScene {
     u.uPour.value = flowing;
     u.uSwirl.value = 1.2 + s.fill * 4.2;
     // The stream lands at a fixed point in space; express it in the spinning liquid's disc coordinates.
-    const c = Math.cos(s.cupSpin);
-    const sn = Math.sin(s.cupSpin);
-    const px = POUR_POS.x / Math.max(radius, 0.3);
-    const pz = POUR_POS.y / Math.max(radius, 0.3);
-    u.uPourPos.value.set(c * px - sn * pz, sn * px + c * pz);
+    const inv = 1 / Math.max(radius, 0.3);
+    u.uPourPos.value.set((localPourX - this.liquid.position.x) * inv, (localPourZ - this.liquid.position.z) * inv);
 
     // ── Stream: falls in from above, then its tail drops away ──
     const surfaceY = this.cup.position.y + level;
@@ -475,7 +523,7 @@ export class CoffeeScene {
       mesh.visible = s.steam > 0.002;
       mesh.position.set(i === 0 ? 0.05 : -0.12, surfaceY - 0.05, i === 0 ? 0 : -0.15);
       mesh.rotation.y = Math.atan2(s.camX - s.tgtX, s.camZ - s.tgtZ) + (i === 0 ? 0 : 0.5);
-      (mesh.material as THREE.ShaderMaterial).uniforms.uOpacity.value = s.steam * (i === 0 ? 0.8 : 0.5);
+      (mesh.material as THREE.ShaderMaterial).uniforms.uOpacity.value = s.steam * (i === 0 ? (this.steam.length === 1 ? 1.15 : 0.95) : 0.6);
     }
 
     this.glow.intensity = s.warmth * 55;
@@ -503,12 +551,29 @@ export class CoffeeScene {
       this.camera.clearViewOffset();
     }
 
+    const shadowSignature = `${s.cupY.toFixed(3)}|${s.cupSpin.toFixed(3)}|${s.fill.toFixed(3)}|${s.pour.toFixed(3)}|${s.saucerDip.toFixed(4)}|${this.tilt.toFixed(3)}`;
+    if (force || shadowSignature !== this.lastShadowSignature) {
+      this.lastShadowSignature = shadowSignature;
+      this.renderer.shadowMap.needsUpdate = true;
+    }
+
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** After a lost WebGL context is restored, everything must be drawn again. */
+  invalidate() {
+    this.lastSignature = "";
+    this.lastShadowSignature = "";
   }
 
   dispose() {
     this.stop();
     for (const d of this.disposables) d.dispose();
+    this.scene.environment = null;
+    this.renderer.renderLists.dispose();
     this.renderer.dispose();
+    // Release the GPU context now instead of waiting for garbage collection
+    // (browsers cap live WebGL contexts; visitors may open and leave the homepage repeatedly).
+    this.renderer.forceContextLoss();
   }
 }
