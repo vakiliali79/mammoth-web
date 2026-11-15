@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/unit/*.test.mjs",
     "test:e2e": "node tests/e2e/run.mjs",
-    "admin:setup": "node scripts/setup-admin.mjs"
+    "admin:setup": "node scripts/setup-admin.mjs",
+    "audit:visual": "node tests/e2e/audit.mjs"
   },
   "engines": {
     "node": ">=20.9"

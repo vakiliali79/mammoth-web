@@ -37,6 +37,8 @@ let keepContext = null;
 let failed = 0;
 const openContexts = new Set();
 async function test(name, fn) {
+  // E2E_ONLY=substring runs a subset (e.g. E2E_ONLY=mobile)
+  if (process.env.E2E_ONLY && !name.includes(process.env.E2E_ONLY)) return;
   const started = Date.now();
   try {
     const note = await fn();
@@ -216,6 +218,158 @@ await test("home: sections, gallery lightbox, structured data", async () => {
   await page.waitForTimeout(600);
   await page.screenshot({ path: `${OUT}footer.png` });
   await context.close();
+});
+
+// ─── Mobile ───────────────────────────────────────────────────────────────
+const PHONES = [
+  [360, 800],
+  [390, 844],
+  [430, 932],
+];
+
+/** Raw RGB pixels of the WebGL canvas area (DOM overlays hidden). */
+async function canvasPixels(page) {
+  const { data, info } = await sharp(await canvasShot(page)).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  return { data, width: info.width, height: info.height };
+}
+const luminanceAt = (px, x, y) => {
+  const i = (y * px.width + x) * 3;
+  return 0.2126 * px.data[i] + 0.7152 * px.data[i + 1] + 0.0722 * px.data[i + 2];
+};
+/** Brightest pixel in the outermost columns: bright means white ceramic is touching the screen edge. */
+function edgeBrightness(px) {
+  let max = 0;
+  for (let y = 0; y < px.height; y += 2) for (const x of [0, 1, 2, px.width - 3, px.width - 2, px.width - 1]) max = Math.max(max, luminanceAt(px, x, y));
+  return Math.round(max);
+}
+/** Number of clearly coffee-coloured (warm brown / crema) pixels. */
+function coffeePixels(px) {
+  let n = 0;
+  for (let i = 0; i < px.data.length; i += 3) {
+    const [r, g, b] = [px.data[i], px.data[i + 1], px.data[i + 2]];
+    if (r > 70 && r - b > 45 && r > g && g > b) n++;
+  }
+  return n;
+}
+async function meanDifference(a, b) {
+  const small = (buf) => sharp(buf).resize(96, 200, { fit: "fill" }).removeAlpha().raw().toBuffer();
+  const [x, y] = await Promise.all([small(a), small(b)]);
+  let sum = 0;
+  for (let i = 0; i < x.length; i++) sum += Math.abs(x[i] - y[i]);
+  return sum / x.length;
+}
+
+for (const [w, h] of PHONES) {
+  await test(`mobile ${w}×${h}: no horizontal overflow on any public page (fa + en)`, async () => {
+    const context = await browser.newContext({ viewport: { width: w, height: h }, isMobile: true, hasTouch: true, reducedMotion: "reduce" });
+    openContexts.add(context);
+    const page = await context.newPage();
+    for (const path of ["/", "/menu", "/en", "/en/menu", "/admin/login"]) {
+      await page.goto(BASE + path, { waitUntil: "networkidle" });
+      const total = await page.evaluate(() => document.documentElement.scrollHeight);
+      for (let y = 0; y < total; y += h * 2) await page.evaluate((v) => scrollTo(0, v), y);
+      const m = await page.evaluate(() => {
+        const vw = document.documentElement.clientWidth;
+        const inScroller = (el) => {
+          for (let p = el.parentElement; p; p = p.parentElement) if (["auto", "scroll", "hidden", "clip"].includes(getComputedStyle(p).overflowX)) return true;
+          return false;
+        };
+        const wide = [...document.querySelectorAll("main *, footer *, header *")].filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 2 && (r.right > vw + 1 || r.left < -1) && !inScroller(el) && getComputedStyle(el).position !== "fixed";
+        });
+        return { overflow: document.documentElement.scrollWidth - vw, wide: wide.slice(0, 3).map((el) => el.outerHTML.slice(0, 80)) };
+      });
+      assert(m.overflow <= 0, `${path}: page is ${m.overflow}px wider than the screen`);
+      assert(m.wide.length === 0, `${path}: element sticks out: ${m.wide.join(" | ")}`);
+    }
+  });
+}
+
+await test("mobile 360×800: primary controls are comfortable tap targets (≥ 44px)", async () => {
+  const { page } = await open("/menu", { mobile: true });
+  await page.setViewportSize({ width: 360, height: 800 });
+  const sizes = await page.evaluate(() =>
+    [...document.querySelectorAll("header a, header button, [data-chip], input[type=search]")]
+      .filter((el) => el.getBoundingClientRect().width > 2 && getComputedStyle(el).visibility !== "hidden" && !el.closest("#mobile-nav"))
+      .map((el) => ({ label: (el.innerText || el.getAttribute("aria-label") || el.placeholder || "").trim().slice(0, 20), h: Math.round(el.getBoundingClientRect().height) })),
+  );
+  const small = sizes.filter((s) => s.h < 44);
+  assert(sizes.length >= 5, "controls found");
+  assert(small.length === 0, `too small: ${small.map((s) => `${s.label} ${s.h}px`).join(", ")}`);
+});
+
+await test("mobile 390×844: featured products are one swipeable row, not a six-screen column", async () => {
+  const { page } = await open("/", { mobile: true, reducedMotion: "reduce" });
+  const rail = page.locator("section ul.snap-rail");
+  await rail.scrollIntoViewIfNeeded();
+  const m = await rail.evaluate((ul) => ({ scrollable: ul.scrollWidth - ul.clientWidth, section: ul.closest("section").getBoundingClientRect().height, vh: innerHeight }));
+  assert(m.scrollable > 300, `rail should scroll horizontally (${m.scrollable}px)`);
+  assert(m.section < m.vh * 1.6, `featured section is ${Math.round(m.section)}px tall on a ${m.vh}px screen`);
+  const before = await rail.evaluate((ul) => ul.scrollLeft);
+  await rail.evaluate((ul) => ul.scrollBy({ left: -320, behavior: "instant" })); // RTL: negative = forward
+  await page.waitForTimeout(400);
+  assert((await rail.evaluate((ul) => ul.scrollLeft)) !== before, "rail scrolls");
+});
+
+await test("mobile 390×844 hero: five scenes scrub with scroll, nothing clipped, coffee visible, rewinds", async () => {
+  const { page, errors } = await open("/", { mobile: true });
+  await waitHero(page);
+  await page.waitForTimeout(2500);
+  const distance = await pinDistance(page);
+  const screens = distance / 844;
+  assert(screens > 2.5 && screens < 4.5, `pin distance should be comfortable for touch (${screens.toFixed(2)} screens)`);
+
+  const start = await canvasShot(page);
+  const info = {};
+  const hashes = new Set();
+  // [scroll position, scene, must the saucer/cup stay clear of the screen edges?]
+  for (const [stop, name, mustFit] of [
+    [0, "empty cup", true],
+    [0.42, "pour", true],
+    [0.6, "landed", true],
+    [0.76, "steam", true],
+    [1, "close-up", false],
+  ]) {
+    await scrubTo(page, distance, stop);
+    const top = await page.evaluate(() => document.querySelector("canvas").getBoundingClientRect().top);
+    assert(Math.abs(top) < 2, `${name}: hero not pinned (top=${top})`);
+    await overlays(page, true);
+    await page.screenshot({ path: `${OUT}mobile-hero-${String(Math.round(stop * 100)).padStart(3, "0")}.png` });
+    const px = await canvasPixels(page);
+    hashes.add(hash(px.data));
+    info[name] = { edge: edgeBrightness(px), coffee: coffeePixels(px) };
+    if (mustFit) assert(info[name].edge < 110, `${name}: something bright touches the screen edge (cup or saucer clipped; ${info[name].edge})`);
+  }
+  assert(hashes.size === 5, `expected 5 distinct scenes, got ${hashes.size}`);
+  assert(info["empty cup"].coffee < 40, `cup should start empty (${info["empty cup"].coffee} coffee px)`);
+  for (const name of ["pour", "landed", "steam", "close-up"]) assert(info[name].coffee > 600, `${name}: coffee surface not visible (${info[name].coffee} px)`);
+
+  // The caption of the final scene and its button are inside the screen.
+  const cta = await page.locator("[data-scene='4'] a").boundingBox();
+  assert(cta && cta.y > 0 && cta.y + cta.height < 844 && cta.x >= 0 && cta.x + cta.width <= 390 && cta.height >= 44, `menu button out of view: ${JSON.stringify(cta)}`);
+
+  // Scrolling back to the top restores the first frame (the animation is reversible).
+  await scrubTo(page, distance, 0);
+  await page.waitForTimeout(3000);
+  const diff = await meanDifference(start, await canvasShot(page));
+  assert(diff < 3, `first frame not restored after scrolling back (mean difference ${diff.toFixed(2)})`);
+  assert(errors.length === 0, errors.join(" | "));
+  return `${screens.toFixed(2)} screens of scroll; coffee px ${Object.values(info).map((v) => v.coffee).join("/")}; edge ${Object.values(info).map((v) => v.edge).join("/")}`;
+});
+
+await test("tablet 768×1024 hero: cup and saucer stay inside the frame while pouring and landing", async () => {
+  const context = await browser.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true });
+  openContexts.add(context);
+  const page = await context.newPage();
+  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  await waitHero(page);
+  const distance = await pinDistance(page);
+  for (const stop of [0.42, 0.6]) {
+    await scrubTo(page, distance, stop);
+    const edge = edgeBrightness(await canvasPixels(page));
+    assert(edge < 110, `clipped at ${stop} (${edge})`);
+  }
 });
 
 // ─── Menu ─────────────────────────────────────────────────────────────────
