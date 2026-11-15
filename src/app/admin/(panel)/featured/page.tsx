@@ -18,17 +18,17 @@ export default async function FeaturedPage() {
           const items = data.items.filter((i) => i.categoryId === category.id);
           if (!items.length) return null;
           return (
-            <fieldset key={category.id} className="rounded-2xl border border-espresso/10 bg-white p-5">
+            <fieldset key={category.id} className="rounded-2xl border border-deep/10 bg-white p-5">
               <legend className="px-2 text-sm font-bold">{category.nameFa}</legend>
-              <ul className="divide-y divide-espresso/8">
+              <ul className="divide-y divide-deep/8">
                 {items.map((item) => {
                   const index = data.featuredIds.indexOf(item.id);
                   return (
                     <li key={item.id} className="flex items-center justify-between gap-4 py-2.5">
                       <label className="flex items-center gap-3 text-sm">
-                        <input type="checkbox" name="featured" value={item.id} defaultChecked={index >= 0} className="size-4 accent-caramel" />
+                        <input type="checkbox" name="featured" value={item.id} defaultChecked={index >= 0} className="size-5 accent-red" />
                         {item.nameFa}
-                        {!item.available && <span className="text-xs text-chocolate/50">(ناموجود — نمایش داده نمی‌شود)</span>}
+                        {!item.available && <span className="text-xs text-carbon/50">(ناموجود — نمایش داده نمی‌شود)</span>}
                       </label>
                       <input
                         type="number"
@@ -39,7 +39,7 @@ export default async function FeaturedPage() {
                         placeholder="ترتیب"
                         aria-label={`ترتیب ${item.nameFa}`}
                         dir="ltr"
-                        className="h-9 w-20 rounded-lg border border-espresso/20 px-2 text-sm"
+                        className="h-11 w-20 rounded-lg border border-deep/20 px-2 text-sm"
                       />
                     </li>
                   );

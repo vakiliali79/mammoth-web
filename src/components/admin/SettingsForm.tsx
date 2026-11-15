@@ -1,7 +1,8 @@
 "use client";
 
 import { saveSettingsAction } from "@/app/admin/actions";
-import { ActionForm, Field, inputClass, RowsEditor, SubmitButton } from "@/components/admin/forms";
+import { ActionForm, Field, RowsEditor, SubmitButton } from "@/components/admin/forms";
+import { inputClass } from "@/lib/admin/styles";
 import type { SiteSettings } from "@/lib/data/types";
 
 export function SettingsForm({ settings }: { settings: SiteSettings }) {
@@ -13,7 +14,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         const hoursError = Object.entries(e).find(([k]) => k.startsWith("hours"))?.[1];
         return (
           <>
-            <div className="grid gap-5 rounded-2xl border border-espresso/10 bg-white p-5 md:grid-cols-2 md:p-6">
+            <div className="grid gap-5 rounded-2xl border border-deep/10 bg-white p-5 md:grid-cols-2 md:p-6">
               <h2 className="font-bold md:col-span-2">اطلاعات تماس</h2>
               <Field label="نشانی (فارسی)" name="addressFa" error={e["contact.addressFa"]} className="md:col-span-2">
                 <input id="addressFa" name="addressFa" defaultValue={c.addressFa} maxLength={300} className={inputClass} />
@@ -41,7 +42,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
               </Field>
             </div>
 
-            <div className="rounded-2xl border border-espresso/10 bg-white p-5 md:p-6">
+            <div className="rounded-2xl border border-deep/10 bg-white p-5 md:p-6">
               <h2 className="mb-4 font-bold">ساعات کاری</h2>
               <RowsEditor
                 name="hours"
@@ -59,12 +60,12 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
               {hoursError && <p className="mt-2 text-xs text-red-700">{hoursError}</p>}
             </div>
 
-            <div className="rounded-2xl border border-espresso/10 bg-white p-5 md:p-6">
+            <div className="rounded-2xl border border-deep/10 bg-white p-5 md:p-6">
               <label className="flex items-start gap-3 text-sm">
-                <input type="checkbox" name="demoMode" defaultChecked={settings.demoMode} className="mt-1 size-4 accent-caramel" />
+                <input type="checkbox" name="demoMode" defaultChecked={settings.demoMode} className="mt-0.5 size-5 accent-red" />
                 <span>
                   <span className="font-bold">حالت نمایشی</span>
-                  <span className="mt-1 block text-chocolate/65">
+                  <span className="mt-1 block text-carbon/65">
                     تا وقتی فعال است، برچسب «نسخه نمایشی — داده‌ها نمونه هستند» در سایت نمایش داده می‌شود. پس از وارد کردن اطلاعات واقعی خاموش کنید.
                   </span>
                 </span>

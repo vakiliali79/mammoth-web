@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { saveItemAction } from "@/app/admin/actions";
-import { ActionForm, Field, ImageInput, inputClass, RowsEditor, SubmitButton } from "@/components/admin/forms";
+import { ActionForm, Field, ImageInput, RowsEditor, SubmitButton } from "@/components/admin/forms";
+import { inputClass } from "@/lib/admin/styles";
 import type { Category, MenuItem } from "@/lib/data/types";
 
 export function ItemForm({ item, categories }: { item?: MenuItem; categories: Category[] }) {
@@ -15,7 +16,7 @@ export function ItemForm({ item, categories }: { item?: MenuItem; categories: Ca
             {item && <input type="hidden" name="id" value={item.id} />}
             <input type="hidden" name="currentImage" value={item?.image ?? ""} />
 
-            <div className="grid gap-5 rounded-2xl border border-espresso/10 bg-white p-5 md:grid-cols-2 md:p-6">
+            <div className="grid gap-5 rounded-2xl border border-deep/10 bg-white p-5 md:grid-cols-2 md:p-6">
               <Field label="نام فارسی *" name="nameFa" error={e.nameFa}>
                 <input id="nameFa" name="nameFa" defaultValue={item?.nameFa} required maxLength={80} className={inputClass} />
               </Field>
@@ -45,25 +46,25 @@ export function ItemForm({ item, categories }: { item?: MenuItem; categories: Ca
               </Field>
               <div className="flex flex-wrap items-center gap-6 md:pt-7">
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="available" defaultChecked={item?.available ?? true} className="size-4 accent-caramel" />
+                  <input type="checkbox" name="available" defaultChecked={item?.available ?? true} className="size-5 accent-red" />
                   موجود است
                 </label>
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="popular" defaultChecked={item?.popular ?? false} className="size-4 accent-caramel" />
+                  <input type="checkbox" name="popular" defaultChecked={item?.popular ?? false} className="size-5 accent-red" />
                   برچسب «محبوب»
                 </label>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-espresso/10 bg-white p-5 md:p-6">
+            <div className="rounded-2xl border border-deep/10 bg-white p-5 md:p-6">
               <h2 className="mb-4 font-bold">تصویر محصول</h2>
               <ImageInput name="imageFile" current={item?.image} />
               {e.image && <p className="mt-2 text-xs text-red-700">{e.image}</p>}
             </div>
 
-            <div className="rounded-2xl border border-espresso/10 bg-white p-5 md:p-6">
+            <div className="rounded-2xl border border-deep/10 bg-white p-5 md:p-6">
               <h2 className="font-bold">اندازه‌ها / انتخاب‌ها (اختیاری)</h2>
-              <p className="mt-1 mb-4 text-xs text-chocolate/60">
+              <p className="mt-1 mb-4 text-xs text-carbon/60">
                 اگر محصول چند اندازه یا نوع سرو دارد، اینجا وارد کنید. در این حالت به‌جای قیمت پایه، قیمت هر اندازه در منو نمایش داده می‌شود.
               </p>
               <RowsEditor

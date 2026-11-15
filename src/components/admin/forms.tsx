@@ -3,11 +3,9 @@
 import { createContext, startTransition, useActionState, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { emptyState, type FormState } from "@/lib/admin/form-state";
+import { inputClass } from "@/lib/admin/styles";
 
 type Action = (prev: FormState, fd: FormData) => Promise<FormState>;
-
-export const inputClass =
-  "h-11 w-full rounded-xl border border-espresso/20 bg-white px-3.5 text-[0.95rem] outline-none transition-colors focus:border-caramel disabled:opacity-60";
 
 /** Pending state of the surrounding <ActionForm> (null when used inside a plain form). */
 const PendingContext = createContext<boolean | null>(null);
@@ -91,9 +89,9 @@ export function Field({
 }) {
   return (
     <label className={`block ${className}`} htmlFor={name}>
-      <span className="mb-1.5 block text-sm font-medium text-chocolate">{label}</span>
+      <span className="mb-1.5 block text-sm font-medium text-carbon">{label}</span>
       {children}
-      {hint && !error && <span className="mt-1 block text-xs text-chocolate/55">{hint}</span>}
+      {hint && !error && <span className="mt-1 block text-xs text-carbon/55">{hint}</span>}
       {error && (
         <span role="alert" className="mt-1 block text-xs text-red-700">
           {error}
@@ -111,7 +109,7 @@ export function ConfirmSubmit({ children, message, className }: { children: Reac
     <button
       type="submit"
       disabled={pending}
-      className={className ?? "rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"}
+      className={className ?? "min-h-11 rounded-lg px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"}
       onClick={(e) => {
         if (!window.confirm(message)) e.preventDefault();
       }}
@@ -155,16 +153,16 @@ export function RowsEditor({
       <input type="hidden" name={name} value={JSON.stringify(rows)} />
       <div className="space-y-2">
         {rows.map((row, i) => (
-          <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl bg-cream/50 p-2.5">
+          <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl bg-soft/50 p-2.5">
             {columns.map((col) =>
               col.type === "checkbox" ? (
                 <label key={col.key} className="flex h-11 items-center gap-2 px-2 text-sm">
-                  <input type="checkbox" checked={Boolean(row[col.key])} onChange={(e) => update(i, col.key, e.target.checked)} className="size-4 accent-caramel" />
+                  <input type="checkbox" checked={Boolean(row[col.key])} onChange={(e) => update(i, col.key, e.target.checked)} className="size-5 accent-red" />
                   {col.label}
                 </label>
               ) : (
                 <label key={col.key} className={`block ${col.width ?? "min-w-28 flex-1"}`}>
-                  <span className="mb-1 block text-xs text-chocolate/60">{col.label}</span>
+                  <span className="mb-1 block text-xs text-carbon/60">{col.label}</span>
                   <input
                     type={col.type ?? "text"}
                     inputMode={col.type === "number" ? "numeric" : undefined}
@@ -181,7 +179,7 @@ export function RowsEditor({
             <button
               type="button"
               onClick={() => setRows((r) => r.filter((_, j) => j !== i))}
-              className="h-11 rounded-lg px-3 text-sm text-red-700 hover:bg-red-50"
+              className="h-11 min-w-11 rounded-lg px-3 text-sm text-red-700 hover:bg-red-50"
             >
               حذف
             </button>
@@ -189,7 +187,7 @@ export function RowsEditor({
         ))}
       </div>
       {rows.length < max && (
-        <button type="button" onClick={() => setRows((r) => [...r, { ...emptyRow }])} className="mt-2 rounded-lg border border-dashed border-espresso/30 px-4 py-2 text-sm hover:border-caramel">
+        <button type="button" onClick={() => setRows((r) => [...r, { ...emptyRow }])} className="mt-2 min-h-11 rounded-lg border border-dashed border-deep/30 px-4 py-2 text-sm hover:border-red">
           + {addLabel}
         </button>
       )}
@@ -204,7 +202,7 @@ export function ImageInput({ name, current }: { name: string; current?: string }
   const shown = preview ?? current;
   return (
     <div className="flex items-center gap-4">
-      <div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-2xl border border-espresso/15 bg-cream text-xs text-chocolate/50">
+      <div className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-2xl border border-deep/15 bg-soft text-xs text-carbon/50">
         {/* eslint-disable-next-line @next/next/no-img-element -- local preview / small admin thumbnail */}
         {shown ? <img src={shown} alt="" className="size-full object-cover" /> : "بدون تصویر"}
       </div>
@@ -218,9 +216,9 @@ export function ImageInput({ name, current }: { name: string; current?: string }
             const file = e.target.files?.[0];
             setPreview(file ? URL.createObjectURL(file) : null);
           }}
-          className="block w-full text-sm file:me-3 file:rounded-full file:border-0 file:bg-espresso file:px-4 file:py-2 file:text-sm file:text-cream"
+          className="block w-full text-sm file:me-3 file:min-h-11 file:rounded-full file:border-0 file:bg-deep file:px-4 file:py-2 file:text-sm file:text-soft"
         />
-        <p className="mt-1.5 text-xs text-chocolate/55">JPG، PNG، WebP یا AVIF — حداکثر ۸ مگابایت. تصویر به‌صورت خودکار بهینه می‌شود.</p>
+        <p className="mt-1.5 text-xs text-carbon/55">JPG، PNG، WebP یا AVIF — حداکثر ۸ مگابایت. تصویر به‌صورت خودکار بهینه می‌شود.</p>
       </div>
     </div>
   );

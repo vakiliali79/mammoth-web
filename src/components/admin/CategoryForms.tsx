@@ -1,13 +1,14 @@
 "use client";
 
 import { deleteCategoryAction, saveCategoryAction } from "@/app/admin/actions";
-import { ActionForm, ConfirmSubmit, Field, inputClass, SubmitButton } from "@/components/admin/forms";
+import { ActionForm, ConfirmSubmit, Field, SubmitButton } from "@/components/admin/forms";
+import { inputClass } from "@/lib/admin/styles";
 import type { Category } from "@/lib/data/types";
 
 export function CategoryForm({ category, itemCount = 0 }: { category?: Category; itemCount?: number }) {
   const key = category?.id ?? "new";
   return (
-    <div className="rounded-2xl border border-espresso/10 bg-white p-5" data-category={category?.slug ?? "new"}>
+    <div className="rounded-2xl border border-deep/10 bg-white p-5" data-category={category?.slug ?? "new"}>
       <ActionForm action={saveCategoryAction} resetOnSuccess={!category} className="space-y-4">
         {(state) => {
           const e = state.errors ?? {};
@@ -30,11 +31,11 @@ export function CategoryForm({ category, itemCount = 0 }: { category?: Category;
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" name="visible" defaultChecked={category?.visible ?? true} className="size-4 accent-caramel" />
+                  <input type="checkbox" name="visible" defaultChecked={category?.visible ?? true} className="size-5 accent-red" />
                   نمایش در منو
                 </label>
                 <SubmitButton className="btn btn-dark min-h-10 px-5 py-2 text-sm">{category ? "ذخیره" : "افزودن دسته‌بندی"}</SubmitButton>
-                {category && <span className="text-xs text-chocolate/55">{itemCount} محصول</span>}
+                {category && <span className="text-xs text-carbon/55">{itemCount} محصول</span>}
               </div>
             </>
           );

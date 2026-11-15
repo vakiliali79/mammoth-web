@@ -2,13 +2,14 @@
 
 /* ─── MAMMOTH CAFE design tokens ───────────────────────────────────────── */
 @theme {
-  --color-ink: #140b08;
-  --color-espresso: #25150f;
-  --color-chocolate: #382319;
-  --color-cream: #f2e8d8;
-  --color-beige: #c7a77a;
-  --color-caramel: #a66a3f;
-  --color-offwhite: #faf7f1;
+  /* Brand palette — the only UI colours. (Coffee tones live in the 3D scene and photos.) */
+  --color-black: #080b0f;
+  --color-deep: #082b40; /* Deep Blue */
+  --color-carbon: #123b55; /* Carbon Blue */
+  --color-sky: #a9d5e8; /* Light Blue */
+  --color-red: #e53945;
+  --color-white: #ffffff;
+  --color-soft: #f4f7fa; /* Soft White */
 
   --font-sans: var(--font-vazir), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-fraunces), "Times New Roman", serif;
@@ -22,15 +23,15 @@
 }
 
 html {
-  background: var(--color-ink);
+  background: var(--color-black);
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: 5rem;
 }
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-offwhite);
-  color: var(--color-espresso);
+  background: var(--color-white);
+  color: var(--color-deep);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -48,18 +49,19 @@ body {
 }
 
 ::selection {
-  background: var(--color-caramel);
-  color: var(--color-offwhite);
+  background: var(--color-red);
+  color: var(--color-white);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-caramel);
+/* Text fields show focus with their border instead of a second ring. */
+:focus-visible:not(input, textarea, select) {
+  outline: 2px solid var(--color-red);
   outline-offset: 3px;
   border-radius: 2px;
 }
 .on-dark :focus-visible,
 .on-dark:focus-visible {
-  outline-color: var(--color-beige);
+  outline-color: var(--color-sky);
 }
 
 /* ─── Typography helpers ───────────────────────────────────────────────── */
@@ -67,22 +69,21 @@ body {
   font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--color-caramel);
+  color: var(--color-carbon);
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;
   &::before {
     content: "";
     width: 2rem;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.7;
+    height: 2px;
+    background: var(--color-red);
   }
 }
 [dir="ltr"] .eyebrow {
   text-transform: uppercase;
-  letter-spacing: 0.22em;
-  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
 }
 
 @utility display-title {
@@ -128,18 +129,18 @@ body {
     transform: scale(0.97);
   }
 }
-@utility btn-cream {
-  background: var(--color-cream);
-  color: var(--color-espresso);
+@utility btn-soft {
+  background: var(--color-soft);
+  color: var(--color-deep);
   &:hover {
-    background: var(--color-beige);
+    background: var(--color-sky);
   }
 }
 @utility btn-dark {
-  background: var(--color-espresso);
-  color: var(--color-cream);
+  background: var(--color-deep);
+  color: var(--color-soft);
   &:hover {
-    background: var(--color-caramel);
+    background: var(--color-red);
   }
 }
 @utility btn-outline {
@@ -279,5 +280,30 @@ body {
   }
   to {
     translate: 0 6%;
+  }
+}
+
+/* Keyboard focus for text fields that are not using the admin input style */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--color-red);
+}
+
+/* Horizontal snap rail (featured products on phones) */
+@utility snap-rail {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  & > * {
+    scroll-snap-align: center;
+    flex: none;
   }
 }

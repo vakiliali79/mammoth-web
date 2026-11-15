@@ -18,9 +18,9 @@ export function PriceForm({ id, price }: { id: string; price: number }) {
         defaultValue={price}
         dir="ltr"
         aria-label="قیمت به تومان"
-        className="h-10 w-28 rounded-lg border border-espresso/20 bg-white px-2 text-sm outline-none focus:border-caramel"
+        className="h-11 w-28 rounded-lg border border-deep/20 bg-white px-2 text-sm outline-none focus:border-red"
       />
-      <button disabled={pending} className="h-10 rounded-lg border border-espresso/20 px-3 text-xs hover:border-caramel disabled:opacity-50">
+      <button disabled={pending} className="h-11 rounded-lg border border-deep/20 px-3 text-sm hover:border-red disabled:opacity-50">
         {pending ? "…" : "ثبت"}
       </button>
       {state.message && (
@@ -44,9 +44,12 @@ export function ToggleForm({ id, field, value, label }: { id: string; field: "av
         aria-checked={value}
         aria-label={label}
         data-toggle={`${field}:${id}`}
-        className={`relative h-6 w-11 rounded-full transition-colors ${value ? "bg-caramel" : "bg-espresso/20"}`}
+        // 44×44 hit area around a 44×24 track
+        className="grid size-11 place-items-center"
       >
-        <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${value ? "right-0.5" : "right-[1.375rem]"}`} />
+        <span className={`relative block h-6 w-11 rounded-full transition-colors ${value ? "bg-red" : "bg-deep/20"}`}>
+          <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${value ? "right-0.5" : "right-[1.375rem]"}`} />
+        </span>
       </button>
     </form>
   );

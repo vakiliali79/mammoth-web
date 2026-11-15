@@ -1,7 +1,8 @@
 "use client";
 
 import { addGalleryAction, deleteGalleryAction, updateGalleryAction } from "@/app/admin/actions";
-import { ActionForm, ConfirmSubmit, Field, ImageInput, inputClass, SubmitButton } from "@/components/admin/forms";
+import { ActionForm, ConfirmSubmit, Field, ImageInput, SubmitButton } from "@/components/admin/forms";
+import { inputClass } from "@/lib/admin/styles";
 import type { GalleryImage } from "@/lib/data/types";
 
 function Fields({ image, k }: { image?: GalleryImage; k: string }) {
@@ -29,7 +30,7 @@ function Fields({ image, k }: { image?: GalleryImage; k: string }) {
 
 export function GalleryAddForm() {
   return (
-    <ActionForm action={addGalleryAction} resetOnSuccess className="space-y-4 rounded-2xl border border-espresso/10 bg-white p-5">
+    <ActionForm action={addGalleryAction} resetOnSuccess className="space-y-4 rounded-2xl border border-deep/10 bg-white p-5">
       <ImageInput name="imageFile" />
       <Fields k="new" />
       <SubmitButton>افزودن به گالری</SubmitButton>
@@ -39,7 +40,7 @@ export function GalleryAddForm() {
 
 export function GalleryItemForm({ image }: { image: GalleryImage }) {
   return (
-    <li className="rounded-2xl border border-espresso/10 bg-white p-4" data-gallery-item={image.id}>
+    <li className="rounded-2xl border border-deep/10 bg-white p-4" data-gallery-item={image.id}>
       {/* eslint-disable-next-line @next/next/no-img-element -- admin thumbnail */}
       <img src={image.src} alt={image.altFa} loading="lazy" className="mb-4 aspect-[3/2] w-full rounded-xl object-cover" />
       <ActionForm action={updateGalleryAction} className="space-y-3">

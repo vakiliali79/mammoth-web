@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function AdminRootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fa" dir="rtl" className={`${vazir.variable} ${fraunces.variable}`}>
-      <body className="min-h-svh bg-offwhite">{children}</body>
+      <body className="min-h-svh bg-white">{children}</body>
     </html>
   );
 }

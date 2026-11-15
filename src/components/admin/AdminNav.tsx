@@ -23,8 +23,8 @@ export function AdminNav() {
             key={link.href}
             href={link.href}
             aria-current={active ? "page" : undefined}
-            className={`block shrink-0 rounded-xl px-4 py-2.5 text-sm whitespace-nowrap transition-colors ${
-              active ? "bg-cream text-espresso" : "text-cream/75 hover:bg-cream/10"
+            className={`block shrink-0 rounded-xl px-4 py-3 text-sm whitespace-nowrap transition-colors ${
+              active ? "bg-soft text-deep" : "text-soft/75 hover:bg-soft/10"
             }`}
           >
             {link.label}

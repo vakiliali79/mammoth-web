@@ -16,7 +16,7 @@ type Params = Promise<{ locale: string }>;
 const asLocale = (value: string): Locale => (isLocale(value) ? value : "fa");
 
 export const viewport: Viewport = {
-  themeColor: "#140b08",
+  themeColor: "#080b0f",
   width: "device-width",
   initialScale: 1,
 };
@@ -90,7 +90,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         </noscript>
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:z-[100] focus:rounded-full focus:bg-cream focus:px-5 focus:py-3 focus:text-espresso ltr:focus:left-3 rtl:focus:right-3"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:z-[100] focus:rounded-full focus:bg-soft focus:px-5 focus:py-3 focus:text-deep ltr:focus:left-3 rtl:focus:right-3"
         >
           {t.nav.skip}
         </a>

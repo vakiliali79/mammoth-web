@@ -4,7 +4,7 @@ export function Price({ value, locale, unit, className = "" }: { value: number; 
   return (
     <span className={`inline-flex items-baseline gap-1.5 whitespace-nowrap ${className}`}>
       <span className="font-semibold">{formatNumber(value, locale)}</span>
-      <span className="text-[0.72em] opacity-60">{unit}</span>
+      <span className="text-[max(0.72em,0.75rem)] opacity-70">{unit}</span>
     </span>
   );
 }

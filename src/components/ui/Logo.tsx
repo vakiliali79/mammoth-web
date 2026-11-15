@@ -13,10 +13,10 @@ export function LogoMark({ className }: { className?: string }) {
 export function Wordmark({ className = "", withFa = true }: { className?: string; withFa?: boolean }) {
   return (
     <span className={`inline-flex items-center gap-3 ${className}`}>
-      <LogoMark className="size-8 shrink-0 text-beige" />
+      <LogoMark className="size-8 shrink-0 text-sky" />
       <span className="flex flex-col leading-none">
         <span className="font-display text-[1.05rem] font-medium tracking-[0.28em]">MAMMOTH</span>
-        {withFa && <span className="mt-1.5 text-[0.7rem] font-medium opacity-70">کافه ماموت</span>}
+        {withFa && <span className="mt-1.5 text-xs font-medium opacity-75">کافه ماموت</span>}
       </span>
     </span>
   );
