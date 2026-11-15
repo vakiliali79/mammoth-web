@@ -67,6 +67,7 @@ npm start                # serves on PORT (default 3100)
 | `npm run lint` | ESLint |
 | `npm test` | Unit tests (auth, validation, search) |
 | `npm run test:e2e` | Browser tests against a running server (see below) |
+| `npm run audit:visual` | Screenshot every page and hero scene at 7 viewport sizes (needs a running server) |
 | `npm run admin:setup` | Create or change the admin login |
 
 ### End-to-end tests

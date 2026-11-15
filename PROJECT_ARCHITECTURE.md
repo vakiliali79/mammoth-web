@@ -43,7 +43,7 @@ sequence. All geometry is generated in code; there are no downloaded models or t
 | Element | Technique |
 | --- | --- |
 | Cup, saucer | `LatheGeometry` from hand-written profiles (wall thickness, foot ring, rounded lip, saucer well). Handle is a `TubeGeometry` along a spline. `MeshPhysicalMaterial` with clearcoat = glazed ceramic |
-| Lighting | A shadow-casting key spotlight, warm and cool rim lights, and an environment map baked at start-up from a small procedural "photo studio" (emissive softboxes) with `PMREMGenerator` — that is where the glaze reflections come from |
+| Lighting | A shadow-casting key spotlight, light-blue rim lights (the coffee itself keeps its natural colour), and an environment map baked at start-up from a small procedural "photo studio" (emissive softboxes) with `PMREMGenerator` — that is where the glaze reflections come from |
 | Coffee surface | A subdivided disc that rises inside the cup; its radius follows the cup's inner profile exactly (`innerRadius()`), so the liquid always meets the wall. `MeshPhysicalMaterial` extended via `onBeforeCompile` |
 | Crema | Fragment shader: domain-warped fractal noise in differentially rotated coordinates (centre turned further than the rim → spiral marbling), a colour ramp from dark coffee to pale crema, fine "tiger" flecking, micro-bubbles (cellular noise) near the rim and the pour point, per-pixel roughness (dark coffee is mirror-like, crema is matte) |
 | Liquid motion | Vertex displacement + matching normal perturbation from a wave function: travelling waves scaled by an *agitation* value, and concentric ripples around the pour point. A damped spring tilts the surface when the cup accelerates, so the coffee sloshes when the cup lands and then settles |
@@ -57,7 +57,7 @@ surface behaviour is procedural (noise + springs), which is what makes it run on
 ### Scroll control
 
 `HeroExperience` builds one GSAP timeline bound to a pinned `ScrollTrigger`
-(`pin: true, scrub: 0.85`, ~5 viewport heights of scroll). The timeline tweens a plain
+(`pin: true`; desktop: `scrub: 0.85` over ~5 viewport heights, touch layouts: `scrub: 0.55` over ~3.6). The timeline tweens a plain
 object — `scene.state` (cup height, spin, fill, pour, steam, warmth, camera position/target,
 frame shift) — and the DOM captions. The scene reads that state every frame. Scrolling
 backwards rewinds everything.
@@ -67,8 +67,8 @@ backwards rewinds everything.
 | 0 – 12 % | **Introduction.** Empty cup hovering above its saucer, wordmark behind it, headline |
 | 8 – 45 % | **Pour.** Camera rises to look into the cup; the stream falls, the cup fills, crema forms and swirls |
 | 44 – 62 % | **Placement.** Camera swings to a low three-quarter view; the cup descends, the saucer dips and springs back, the coffee sloshes |
-| 60 – 82 % | **Steam & detail.** Steam rises, warm back-light fades in, close-up of the crema |
-| 80 – 100 % | **Reveal.** Slow push-in, the backdrop warms, closing line + menu button; the page then scrolls on |
+| 60 – 82 % | **Steam & detail.** Steam rises, a light-blue back-light fades in, close-up of the crema |
+| 80 – 100 % | **Reveal.** Slow push-in, the backdrop brightens to carbon blue, closing line + menu button; the page then scrolls on |
 
 ### Performance and fallbacks
 
@@ -77,8 +77,23 @@ backwards rewinds everything.
 - The render loop runs only while the hero is on screen and the tab is visible, and **skips
   frames when nothing changed** (no steam, no pour, no motion) — an idle intro costs no GPU.
 - Two quality tiers: phones / coarse pointers / ≤ 4 cores get lower geometry detail, a
-  1024 px shadow map and a pixel-ratio cap of 1.5 (desktop: 2048 px, cap 2).
-- On portrait screens the camera pulls back (`scene.fit`) and captions move to the bottom.
+  1024 px shadow map, fewer noise octaves, one steam sheet instead of two and a pixel-ratio
+  cap of 1.5 (desktop: 2048 px, cap 2).
+- **Adaptive resolution:** if frames stay slow while animating, the pixel ratio steps down
+  (to 60 % at most, never below 0.75 device pixels) instead of dropping frames.
+- **Shadows on demand:** the shadow map is re-rendered only when the cup, liquid or stream
+  moved — not on steam-only frames.
+- **Steam-only frames run at ~30 fps.** That is the state visitors rest in longest.
+- **Framing by aspect ratio:** each scene defines a camera direction, an art-directed
+  distance and how much of the scene must fit horizontally (`frame()` / `poses()` in
+  `HeroExperience.tsx`). On portrait screens the camera backs off just enough that the cup
+  and saucer are never cropped (only the final close-up may crop the saucer). Values are
+  function-based, so rotating a device or resizing re-frames on the next ScrollTrigger refresh.
+- **Mobile browser chrome:** the stage is `100lvh` tall (no gap under the pinned hero when the
+  address bar collapses, no canvas resize while scrolling); captions sit in a `100svh` box so
+  they are never hidden behind browser UI.
+- A lost WebGL context is recovered; on unmount all GPU resources are disposed and the
+  context is released.
 - `prefers-reduced-motion`: no pinning or scrubbing; one still frame of the finished cup.
 - No WebGL: `public/images/hero-poster.jpg` (a render of the same scene) is shown.
 
@@ -142,7 +157,7 @@ Not included (reasonable next steps if needs grow): multiple admin users/roles, 
 
 ## 6. Styling
 
-Tailwind CSS 4, tokens in `globals.css` (`--color-espresso`, `--color-cream`, …). Layout uses
+Tailwind CSS 4, tokens in `globals.css`. The UI palette is exactly: Carbon Blue `#123B55` (`carbon`), Light Blue `#A9D5E8` (`sky`), Deep Blue `#082B40` (`deep`), Red `#E53945` (`red`), Black `#080B0F` (`black`), White `#FFFFFF` (`white`) and Soft White `#F4F7FA` (`soft`). Coffee browns exist only inside the 3D scene and the photographs. Red is used for rules, numerals, badges and focus — not for small body text (its contrast on white is ≈ 4:1). Layout uses
 logical properties / `rtl:` `ltr:` variants so both directions share one codebase. Persian
 text is set in Vazirmatn; Latin display text in Fraunces (also used for English headings).
 Section reveals are CSS transitions triggered by one small IntersectionObserver component;
@@ -161,7 +176,12 @@ actually been filled in.
   validation schemas, search normalisation.
 - `npm run test:e2e` — Playwright against a production build with software WebGL: hero
   pinning and scrubbing (distinct frames per scroll position, rewind), idle steam motion,
-  reduced motion, mobile overflow and navigation, menu search/categories, i18n, 404, SEO
+  reduced motion, mobile overflow at 360/390/430 px, tap-target sizes, the phone hero (five
+  scenes, nothing clipped, coffee visible, rewind), tablet framing, mobile navigation, menu search/categories, i18n, 404, SEO
   files, broken links/images, and the full admin flow (login, validation errors, category and
   product CRUD with image upload, inline price, availability, featured, settings, gallery,
   logout).
+- `npm run audit:visual` — not a pass/fail test: screenshots every public page, the hero
+  scenes and the admin screens at 360×800, 390×844, 430×932, 768×1024, 1024×768, 1440×900 and
+  1920×1080 into `tests/e2e/output/audit/`, and prints overflow / tap-target / tiny-text
+  metrics. The screenshots are meant to be looked at.
